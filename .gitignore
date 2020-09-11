@@ -23,7 +23,6 @@ output/
 *.pth
 
 runs/
-data/
 .vscode/
 .github/
 
@@ -233,3 +232,6 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+1.11
+0.2.5
+*.zip

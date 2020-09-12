@@ -29,10 +29,10 @@ def train(data_dir, epochs, img_size, batch_size, accumulate, lr, adam, resume,
     train_loader = DataLoader(
         train_data,
         batch_size=batch_size,
-        shuffle=not (dist.is_initialized()),
+        shuffle=not (dist.is_available() and dist.is_initialized()),
         sampler=DistributedSampler(train_data, dist.get_world_size(),
                                    dist.get_rank())
-        if dist.is_initialized() else None,
+        if dist.is_available() and dist.is_initialized() else None,
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=CocoDataset.collate_fn,
@@ -46,10 +46,10 @@ def train(data_dir, epochs, img_size, batch_size, accumulate, lr, adam, resume,
         val_loader = DataLoader(
             val_data,
             batch_size=batch_size,
-            shuffle=not (dist.is_initialized()),
+            shuffle=not (dist.is_available() and dist.is_initialized()),
             sampler=DistributedSampler(val_data, dist.get_world_size(),
                                        dist.get_rank())
-            if dist.is_initialized() else None,
+            if dist.is_available() and dist.is_initialized() else None,
             pin_memory=True,
             num_workers=num_workers,
             collate_fn=CocoDataset.collate_fn,
@@ -138,5 +138,5 @@ if __name__ == "__main__":
           mixed_precision=opt.mix_precision,
           notest=opt.notest,
           nosave=opt.nosave)
-    if dist.is_initialized():
+    if dist.is_available() and dist.is_initialized():
         dist.destroy_process_group()

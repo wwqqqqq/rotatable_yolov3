@@ -152,9 +152,11 @@ def compute_ap(recall, precision):
 
 def polygon_iou(polygon1, polygon2):
     iou = torch.zeros(len(polygon2)).to(polygon2.device)
-    poly1 = Polygon(polygon1.detach().cpu().numpy()[:8].reshape(4, 2)).convex_hull
+    poly1 = Polygon(polygon1.detach().cpu().numpy()
+                    [:8].reshape(4, 2)).convex_hull
     for i, poly in enumerate(polygon2):
-        poly2 = Polygon(poly.detach().cpu().numpy()[:8].reshape(4, 2)).convex_hull
+        poly2 = Polygon(poly.detach().cpu().numpy()[
+                        :8].reshape(4, 2)).convex_hull
         inter_area = poly1.intersection(poly2).area
         union_area = poly1.area + poly2.area - inter_area
         iou[i] = inter_area / (union_area + 1e-5)
@@ -388,7 +390,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
 
 def build_targets(model, targets):
     # targets = [image, class, x, y, w, h]
-    if dist.is_initialized():
+    if dist.is_available() and dist.is_initialized():
         yolo_layers = model.module.yolo_layers
     else:
         yolo_layers = model.yolo_layers
@@ -487,7 +489,8 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.5):
                     if len(dc) == 1:
                         det_max.append(dc)
                         break
-                    i = polygon_iou(dc[0], dc) > nms_thres  # iou with other boxes
+                    # iou with other boxes
+                    i = polygon_iou(dc[0], dc) > nms_thres
                     weights = dc[i, 8:9]
                     dc[0, :8] = (weights * dc[i, :8]).sum(0) / weights.sum()
                     det_max.append(dc[:1])

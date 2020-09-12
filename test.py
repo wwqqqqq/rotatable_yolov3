@@ -106,7 +106,7 @@ def test(model, fetcher, conf_thres=1e-3, nms_thres=0.5):
     stats = [np.concatenate(x, 0) for x in list(zip(*stats))]
 
     # sync stats
-    if dist.is_initialized():
+    if dist.is_available() and dist.is_initialized():
         for i in range(len(stats)):
             stat = torch.FloatTensor(stats[i]).to(device)
             ls = torch.IntTensor([len(stat)]).to(device)

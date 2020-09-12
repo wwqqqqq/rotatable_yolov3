@@ -6,11 +6,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.quantization import DeQuantStub, QuantStub
 
-from pytorch_modules.backbones import (mobilenet_v2, resnet34, resnet50,
-                                       resnext50_32x4d)
-from pytorch_modules.backbones.mobilenet import ConvBNReLU, InvertedResidual
+from torchvision.models import (mobilenet_v2, resnet34, resnet50,
+                                resnext50_32x4d)
+from torchvision.models.mobilenet import ConvBNReLU, InvertedResidual
 from pytorch_modules.nn import ConvNormAct, SeparableConvNormAct
-from pytorch_modules.utils import initialize_weights, replace_relu6
+from pytorch_modules.utils import initialize_weights  # , replace_relu6
 
 from .fpn import FPN
 from .spp import SPP
@@ -37,7 +37,6 @@ class YOLOLayer(nn.Module):
 
         if self.training:
             return p
-
 
         else:  # inference
             io = p.clone()  # inference output
@@ -72,7 +71,8 @@ class YOLOV3(nn.Module):
         depth = 5
         width = [512, 256, 128]
         planes_list = [1280, 96, 32]
-        self.spp = nn.Sequential(ConvNormAct(1280, 320, 1, activate=nn.ReLU(True)), SPP())
+        self.spp = nn.Sequential(ConvNormAct(
+            1280, 320, 1, activate=nn.ReLU(True)), SPP())
         self.fpn = FPN(planes_list, width, depth)
         self.head = nn.ModuleList([])
         self.yolo_layers = nn.ModuleList([])
@@ -125,13 +125,16 @@ class YOLOV3(nn.Module):
         # replace_relu6(self)
         for m in self.modules():
             if type(m) == ConvBNReLU:
-                torch.quantization.fuse_modules(m, ['0', '1', '2'], inplace=True)
+                torch.quantization.fuse_modules(
+                    m, ['0', '1', '2'], inplace=True)
             if type(m) == ConvNormAct:
-                torch.quantization.fuse_modules(m, ['0', '1', '2'], inplace=True)
+                torch.quantization.fuse_modules(
+                    m, ['0', '1', '2'], inplace=True)
             if type(m) == InvertedResidual:
                 for idx in range(len(m.conv)):
                     if type(m.conv[idx]) == nn.Conv2d:
-                        torch.quantization.fuse_modules(m.conv, [str(idx), str(idx + 1)], inplace=True)
+                        torch.quantization.fuse_modules(
+                            m.conv, [str(idx), str(idx + 1)], inplace=True)
 
 
 def create_grids(self,
